@@ -1,0 +1,292 @@
+{
+  "correction_system": {
+    "description": "GWSI 2.0 修正系数体系，用于调整基础评分以反映数据质量和市场特殊因素",
+    "structure": {
+      "level1": "基础修正系数（数据可靠性）",
+      "level2": "增分组项（市场优势因素）",
+      "level3": "综合回报率（最终修正系数）"
+    },
+    "valid_range": {
+      "min": 0.4,
+      "max": 1.2,
+      "description": "所有修正系数必须在此范围内"
+    }
+  },
+  "base_correction_coefficient": {
+    "description": "基于数据来源和质量的基础修正系数",
+    "types": [
+      {
+        "name": "真实指标",
+        "english_name": "Authentic Indicators",
+        "range": [1.1, 1.2],
+        "description": "完整、准确、实时的官方或第三方认证数据",
+        "examples": [
+          "IPyNAME（国家气象数据库）",
+          "ALMM（各国能源部官方统计）",
+          "KTVA（关税贸易验证系统）",
+          "官方政府公告",
+          "国际组织认证数据"
+        ],
+        "data_completeness": {
+          "100%": 1.2,
+          "90-99%": 1.15,
+          "80-89%": 1.1
+        }
+      },
+      {
+        "name": "行业标准指标",
+        "english_name": "Industry Standard Indicators",
+        "range": [1.0, 1.1],
+        "description": "国际标准或行业广泛认可的指标",
+        "examples": [
+          "IEC（国际电工委员会）标准",
+          "各国政府官方统计数据",
+          "第三方审计报告",
+          "权威研究机构报告",
+          "行业协会数据"
+        ],
+        "credibility_score": {
+          "high": 1.1,
+          "medium": 1.05,
+          "basic": 1.0
+        }
+      },
+      {
+        "name": "分析估算",
+        "english_name": "Analysis and Estimation",
+        "range": [0.7, 0.85],
+        "description": "基于样本推导、历史数据或专家判断的估算",
+        "examples": [
+          "基于样本推导的全国指标",
+          "历史数据趋势预测",
+          "行业专家评估意见",
+          "市场调研数据",
+          "咨询报告估算"
+        ],
+        "confidence_level": {
+          "high_confidence": 0.85,
+          "medium_confidence": 0.77,
+          "low_confidence": 0.7
+        }
+      }
+    ]
+  },
+  "bonus_factors": {
+    "description": "根据市场特殊优势的加分项",
+    "structure": "综合修正系数 = 基础修正系数 × ∏(1 + 各增分项)",
+    "factors": [
+      {
+        "id": "bf_01",
+        "name": "风资源优势",
+        "english_name": "Wind Resource Advantage",
+        "max_bonus": 0.2,
+        "description": "市场拥有充足的风资源，便于大规模开发",
+        "trigger_conditions": [
+          {
+            "metric": "平均风速",
+            "threshold": 7.5,
+            "unit": "m/s",
+            "bonus": 0.15
+          },
+          {
+            "metric": "年均发电小时数",
+            "threshold": 2500,
+            "unit": "小时",
+            "bonus": 0.1
+          },
+          {
+            "metric": "风资源品质等级",
+            "threshold": "I级",
+            "unit": "等级",
+            "bonus": 0.2
+          }
+        ],
+        "calculation": "max(所有满足条件的bonus)",
+        "notes": "可多个条件同时满足，取最高值"
+      },
+      {
+        "id": "bf_02",
+        "name": "电网友好性",
+        "english_name": "Grid Friendliness",
+        "max_bonus": 0.2,
+        "description": "电网对风电消纳和并网的友好程度",
+        "trigger_conditions": [
+          {
+            "metric": "消纳率",
+            "threshold": 95,
+            "unit": "%",
+            "bonus": 0.15
+          },
+          {
+            "metric": "电网稳定性指数",
+            "threshold": 0.95,
+            "unit": "指数",
+            "bonus": 0.1
+          },
+          {
+            "metric": "并网周期",
+            "threshold": 6,
+            "unit": "月",
+            "bonus": 0.12,
+            "inverse": true
+          }
+        ],
+        "calculation": "max(所有满足条件的bonus)",
+        "notes": "反向指标（并网周期）：越短越好"
+      },
+      {
+        "id": "bf_03",
+        "name": "产业成熟度",
+        "english_name": "Industry Maturity",
+        "max_bonus": 0.2,
+        "description": "市场风电产业链配套和人才储备的成熟程度",
+        "trigger_conditions": [
+          {
+            "metric": "产业链完整度",
+            "threshold": 80,
+            "unit": "%",
+            "bonus": 0.12
+          },
+          {
+            "metric": "技术人才数量",
+            "threshold": 1000,
+            "unit": "人",
+            "bonus": 0.1
+          },
+          {
+            "metric": "本地供应商数量",
+            "threshold": 50,
+            "unit": "家",
+            "bonus": 0.08
+          },
+          {
+            "metric": "R&D投入占比",
+            "threshold": 3,
+            "unit": "%",
+            "bonus": 0.15
+          }
+        ],
+        "calculation": "sum(所有满足条件的bonus) 但不超过max_bonus",
+        "notes": "可多个条件累加，但总和不超过0.2"
+      }
+    ]
+  },
+  "comprehensive_benefit_rate": {
+    "description": "综合回报率（最终修正系数）的计算",
+    "formula": "修正系数 = 基础修正系数 × ∏(1 + 各增分项)",
+    "example": {
+      "base_coefficient": 1.0,
+      "bonus_wind_resource": 0.15,
+      "bonus_grid_friendly": 0.1,
+      "bonus_industry_maturity": 0.08,
+      "calculation": "1.0 × (1+0.15) × (1+0.1) × (1+0.08) = 1.358",
+      "result": 1.358,
+      "note": "实际结果将被限制在 0.4-1.2 的范围内，所以最终为 1.2"
+    },
+    "range": {
+      "min": 0.4,
+      "typical_min": 0.6,
+      "typical_max": 1.1,
+      "max": 1.2,
+      "description": "综合修正系数的有效范围"
+    }
+  },
+  "correction_factor_profiles": {
+    "description": "不同市场类型的典型修正系数配置",
+    "profiles": [
+      {
+        "market_type": "发达国家市场",
+        "example_countries": ["德国", "丹麦", "日本"],
+        "typical_base": 1.1,
+        "typical_bonuses": {
+          "wind_resource": 0.05,
+          "grid_friendly": 0.2,
+          "industry_maturity": 0.2
+        },
+        "typical_result": 1.15,
+        "notes": "数据完善，标准清晰，但风资源可能有限"
+      },
+      {
+        "market_type": "新兴市场",
+        "example_countries": ["印度", "巴西", "墨西哥"],
+        "typical_base": 0.85,
+        "typical_bonuses": {
+          "wind_resource": 0.2,
+          "grid_friendly": 0.1,
+          "industry_maturity": 0.08
+        },
+        "typical_result": 1.0,
+        "notes": "风资源好，但数据可靠性和产业成熟度有待提升"
+      },
+      {
+        "market_type": "中国市场",
+        "example_countries": ["中国"],
+        "typical_base": 1.15,
+        "typical_bonuses": {
+          "wind_resource": 0.15,
+          "grid_friendly": 0.1,
+          "industry_maturity": 0.15
+        },
+        "typical_result": 1.15,
+        "notes": "官方数据权威，产业链完整，但本地化要求高"
+      },
+      {
+        "market_type": "小型/不稳定市场",
+        "example_countries": ["某些非洲、中东国家"],
+        "typical_base": 0.7,
+        "typical_bonuses": {
+          "wind_resource": 0.1,
+          "grid_friendly": 0.0,
+          "industry_maturity": 0.05
+        },
+        "typical_result": 0.8,
+        "notes": "数据稀缺，基础设施薄弱，风险较大"
+      }
+    ]
+  },
+  "adjustment_rules": {
+    "description": "特殊情况下的调整规则",
+    "rules": [
+      {
+        "condition": "发生重大政治事件或政策变化",
+        "adjustment": "临时调整基础修正系数 ±0.1",
+        "approval": "需要管理层审批",
+        "duration": "3-6 个月后重新评估"
+      },
+      {
+        "condition": "市场进入重大技术突破",
+        "adjustment": "增加相关增分项 +0.05-0.15",
+        "approval": "技术部门确认后执行",
+        "duration": "永久生效（直到下次评审）"
+      },
+      {
+        "condition": "数据来源质量显著提升",
+        "adjustment": "升级基础修正系数级别",
+        "approval": "数据治理部门确认",
+        "duration": "立即生效"
+      },
+      {
+        "condition": "市场进入衰退期",
+        "adjustment": "降低所有增分项 -50%",
+        "approval": "战略规划部门确认",
+        "duration": "直到市场复苏"
+      }
+    ]
+  },
+  "update_schedule": {
+    "base_coefficient": "月度检查，季度更新",
+    "bonus_factors": "实时监测，季度评估",
+    "overall_review": "年度全面评审",
+    "emergency_adjustment": "需要时随时执行"
+  },
+  "quality_assurance": {
+    "validation_rules": [
+      "所有修正系数必须在 0.4-1.2 范围内",
+      "基础修正系数必须有明确的数据来源",
+      "增分项必须有量化的触发条件",
+      "每次调整必须有变更记录和批准"
+    ],
+    "review_frequency": "月度",
+    "audit_frequency": "季度"
+  }
+}
