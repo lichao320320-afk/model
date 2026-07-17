@@ -383,57 +383,6 @@ class GWSICalculator:
             logger.error(f"加载修正系数配置失败: {e}")
             return {}
     
-    def score_dimension(self, dimension_id: int, market: str,
-                       raw_values: Dict) -> DimensionScore:
-        """对单个维度进行评分"""
-        
-        dimension = next((d for d in self.dimensions if d['id'] == dimension_id), None)
-        if not dimension:
-            raise ValueError(f"维度 {dimension_id} 不存在")
-        
-        sub_scores = []
-        confidence_scores = []
-        
-        for sub_indicator in dimension['sub_indicators']:
-            sub_name = sub_indicator['name']
-            if sub_name in raw_values:
-                raw_value = raw_values[sub_name]
-                score = self._calculate_sub_score(raw_value, sub_indicator)
-                weight = sub_indicator['weight']
-                sub_scores.append((score, weight))
-        
-        if sub_scores:
-            total_score = sum(score * weight for score, weight in sub_scores)
-            avg_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0.8
-        else:
-            total_score = 0
-            avg_confidence = 0
-        
-        return DimensionScore(
-            dimension_id=dimension_id,
-            dimension_name=dimension['name'],
-            score=total_score,
-            weight=dimension['weight'],
-            data_sources=dimension.get('data_sources', []),
-            confidence_level=avg_confidence,
-            last_updated=datetime.now().isoformat()
-        )
-    
-    def _calculate_sub_score(self, raw_value, sub_indicator: Dict) -> float:
-        """根据评分规则计算子指标得分"""
-        
-        scoring_rules = sub_indicator['scoring_rules']
-        
-        for rule in scoring_rules:
-            if 'range' in rule:
-                min_val, max_val = rule['range']
-                if min_val <= raw_value < max_val:
-                    return rule['score']
-            elif 'text' in rule and raw_value == rule['text']:
-                return rule['score']
-        
-        return 0
-    
     def calculate_base_gwsi(self, dimension_scores: List[DimensionScore]) -> float:
         """计算基础GWSI评分（未修正）"""
         total_score = 0

@@ -107,8 +107,6 @@ class MarketAnalyzer:
         
         for market, scores in self.market_scores.items():
             gwsi = scores['final_gwsi']
-            
-            # 计算市场吸引力（这里用confidence作为代理）
             attractiveness = scores['confidence'] * 100
             
             if gwsi >= gwsi_threshold and attractiveness >= attractiveness_threshold:
@@ -135,7 +133,6 @@ class MarketAnalyzer:
         gwsi = scores['final_gwsi']
         dimensions = metadata['dimension_scores']
         
-        # 找出最强和最弱的维度
         sorted_dims = sorted(dimensions, key=lambda x: x['score'], reverse=True)
         
         recommendation = {
@@ -234,24 +231,3 @@ class MarketAnalyzer:
             json.dump(report, f, ensure_ascii=False, indent=2)
         
         return report
-    
-    def get_market_trend_analysis(self, market: str, historical_scores: List[Dict]) -> Dict:
-        """
-        分析市场GWSI的历史趋势
-        """
-        if not historical_scores:
-            return {}
-        
-        df = pd.DataFrame(historical_scores)
-        
-        trend = {
-            'market': market,
-            'current_score': self.market_scores[market]['final_gwsi'] if market in self.market_scores else None,
-            'average_score': df['gwsi'].mean(),
-            'max_score': df['gwsi'].max(),
-            'min_score': df['gwsi'].min(),
-            'trend': 'improving' if df['gwsi'].iloc[-1] > df['gwsi'].iloc[0] else 'declining',
-            'volatility': df['gwsi'].std(),
-        }
-        
-        return trend
