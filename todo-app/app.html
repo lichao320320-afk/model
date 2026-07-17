@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow - 智能任务管理应用</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-tasks"></i>
+                    <span>TaskFlow</span>
+                </div>
+                <button class="toggle-sidebar" id="toggleSidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-view="dashboard">
+                    <i class="fas fa-home"></i>
+                    <span>仪表盘</span>
+                </a>
+                <a href="#" class="nav-item" data-view="tasks">
+                    <i class="fas fa-list-check"></i>
+                    <span>我的任务</span>
+                </a>
+                <a href="#" class="nav-item" data-view="calendar">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>日历</span>
+                </a>
+                <a href="#" class="nav-item" data-view="analytics">
+                    <i class="fas fa-chart-line"></i>
+                    <span>数据分析</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="btn-icon" id="settingsBtn" title="设置">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button class="btn-icon" id="helpBtn" title="帮助">
+                    <i class="fas fa-question-circle"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="app-header">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="搜索任务...">
+                </div>
+                <div class="header-actions">
+                    <button class="btn-icon notification-btn" id="notificationBtn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                    <div class="user-profile">
+                        <div class="avatar">U</div>
+                        <span>用户</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Views Container -->
+            <div class="views-container">
+                <!-- Dashboard View -->
+                <div class="view-content" id="dashboardView">
+                    <section class="hero-section">
+                        <h1>欢迎回来！</h1>
+                        <p>今天是美好的一天，让我们完成今天的目标</p>
+                    </section>
+
+                    <div class="dashboard-grid">
+                        <!-- Stats Cards -->
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon primary">
+                                    <i class="fas fa-tasks"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-label">总任务</span>
+                                    <span class="stat-value" id="totalTasksStat">0</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon success">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-label">已完成</span>
+                                    <span class="stat-value" id="completedTasksStat">0</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon warning">
+                                    <i class="fas fa-hourglass-half"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-label">进行中</span>
+                                    <span class="stat-value" id="activeTasksStat">0</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon danger">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-label">逾期</span>
+                                    <span class="stat-value" id="overdueTasksStat">0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Add -->
+                        <div class="card quick-add-card">
+                            <h3>快速添加任务</h3>
+                            <div class="quick-add-form">
+                                <input type="text" id="quickAddInput" placeholder="输入新任务...">
+                                <button class="btn-primary" id="quickAddBtn">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Today's Tasks -->
+                        <div class="card today-tasks-card">
+                            <h3>今日任务</h3>
+                            <div id="todayTasksList" class="today-tasks-list">
+                                <p class="empty-message">没有今日任务</p>
+                            </div>
+                        </div>
+
+                        <!-- Progress Chart -->
+                        <div class="card progress-card">
+                            <h3>完成度</h3>
+                            <div class="progress-chart">
+                                <div class="progress-ring">
+                                    <svg width="120" height="120">
+                                        <circle cx="60" cy="60" r="50" class="progress-bg"></circle>
+                                        <circle cx="60" cy="60" r="50" class="progress-fill" id="progressCircle"></circle>
+                                    </svg>
+                                    <div class="progress-text">
+                                        <span class="progress-percent" id="progressPercent">0%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tasks View -->
+                <div class="view-content" id="tasksView" style="display: none;">
+                    <div class="view-header">
+                        <h2>我的任务</h2>
+                        <button class="btn-primary" id="addNewTaskBtn">
+                            <i class="fas fa-plus"></i>
+                            新建任务
+                        </button>
+                    </div>
+
+                    <div class="filters-bar">
+                        <button class="filter-btn active" data-filter="all">全部</button>
+                        <button class="filter-btn" data-filter="today">今日</button>
+                        <button class="filter-btn" data-filter="week">本周</button>
+                        <button class="filter-btn" data-filter="overdue">逾期</button>
+                        <button class="filter-btn" data-filter="completed">已完成</button>
+                    </div>
+
+                    <div id="tasksList" class="tasks-grid">
+                        <p class="empty-message">暂无任务</p>
+                    </div>
+                </div>
+
+                <!-- Calendar View -->
+                <div class="view-content" id="calendarView" style="display: none;">
+                    <div class="view-header">
+                        <h2>日历</h2>
+                        <div class="calendar-controls">
+                            <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                            <span id="currentMonth"></span>
+                            <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                    <div id="calendar" class="calendar-container"></div>
+                </div>
+
+                <!-- Analytics View -->
+                <div class="view-content" id="analyticsView" style="display: none;">
+                    <div class="view-header">
+                        <h2>数据分析</h2>
+                    </div>
+                    <div class="analytics-grid">
+                        <div class="card">
+                            <h3>每日任务完成量</h3>
+                            <div id="dailyChart" class="chart-placeholder">
+                                <p>图表加载中...</p>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h3>任务分类统计</h3>
+                            <div id="categoryChart" class="chart-placeholder">
+                                <p>图表加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Task Modal -->
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="taskModalTitle">新建任务</h3>
+                <button class="btn-close" id="closeTaskModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="taskForm" class="task-form">
+                <div class="form-group">
+                    <label for="taskTitle">任务标题 *</label>
+                    <input type="text" id="taskTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="taskDescription">描述</label>
+                    <textarea id="taskDescription" rows="3"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="taskCategory">分类</label>
+                        <select id="taskCategory">
+                            <option value="work">工作</option>
+                            <option value="personal">个人</option>
+                            <option value="shopping">购物</option>
+                            <option value="health">健康</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskPriority">优先级</label>
+                        <select id="taskPriority">
+                            <option value="low">低</option>
+                            <option value="medium" selected>中</option>
+                            <option value="high">高</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="taskDueDate">截止日期</label>
+                    <input type="date" id="taskDueDate">
+                </div>
+                <div class="form-group">
+                    <label for="taskTags">标签（用逗号分隔）</label>
+                    <input type="text" id="taskTags" placeholder="标签1, 标签2">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">保存任务</button>
+                    <button type="button" class="btn-secondary" id="cancelTaskBtn">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h3>设置</h3>
+                <button class="btn-close" id="closeSettingsModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="settings-content">
+                <div class="setting-item">
+                    <label class="setting-label">
+                        <input type="checkbox" id="darkModeToggle">
+                        <span>深色模式</span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label">
+                        <input type="checkbox" id="notificationsToggle" checked>
+                        <span>启用通知</span>
+                    </label>
+                </div>
+                <div class="setting-divider"></div>
+                <button class="btn-secondary w-100" id="exportDataBtn">
+                    <i class="fas fa-download"></i>
+                    导出数据
+                </button>
+                <button class="btn-secondary w-100" id="importDataBtn">
+                    <i class="fas fa-upload"></i>
+                    导入数据
+                </button>
+                <button class="btn-danger w-100" id="clearAllDataBtn">
+                    <i class="fas fa-trash"></i>
+                    清空所有数据
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

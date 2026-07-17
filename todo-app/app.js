@@ -1,193 +1,366 @@
-// ==================== Task Manager Class ====================
-class TaskManager {
+// ==================== TaskFlow Application ====================
+
+class TaskFlowApp {
     constructor() {
         this.tasks = this.loadTasks();
         this.currentFilter = 'all';
-        this.currentCategory = null;
+        this.currentView = 'dashboard';
+        this.editingTaskId = null;
         this.init();
     }
 
     // ==================== Initialization ====================
     init() {
         this.setupEventListeners();
+        this.setupViews();
+        this.loadTheme();
         this.render();
-        this.updateLastModified();
     }
 
-    // ==================== Event Listeners ====================
     setupEventListeners() {
-        // Add task
-        document.getElementById('addBtn').addEventListener('click', () => this.addTask());
-        document.getElementById('taskInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.addTask();
+        // Navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                this.switchView(item.dataset.view);
+            });
         });
 
-        // Filter buttons
+        // Task Modal
+        document.getElementById('addNewTaskBtn').addEventListener('click', () => this.openTaskModal());
+        document.getElementById('closeTaskModal').addEventListener('click', () => this.closeTaskModal());
+        document.getElementById('cancelTaskBtn').addEventListener('click', () => this.closeTaskModal());
+        document.getElementById('taskForm').addEventListener('submit', (e) => this.handleTaskSubmit(e));
+
+        // Quick Add
+        document.getElementById('quickAddBtn').addEventListener('click', () => this.quickAddTask());
+        document.getElementById('quickAddInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.quickAddTask();
+        });
+
+        // Filters
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                e.target.closest('.filter-btn').classList.add('active');
-                this.currentFilter = e.target.closest('.filter-btn').dataset.filter;
-                this.render();
+                e.target.classList.add('active');
+                this.currentFilter = e.target.dataset.filter;
+                this.renderTasks();
             });
         });
 
-        // Category buttons
-        document.querySelectorAll('.category-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const category = e.currentTarget.dataset.category;
-                e.currentTarget.classList.toggle('active');
-                this.currentCategory = e.currentTarget.classList.contains('active') ? category : null;
-                this.render();
-            });
-        });
+        // Settings
+        document.getElementById('settingsBtn').addEventListener('click', () => this.openSettingsModal());
+        document.getElementById('closeSettingsModal').addEventListener('click', () => this.closeSettingsModal());
+        document.getElementById('darkModeToggle').addEventListener('change', (e) => this.toggleDarkMode(e.target.checked));
+        document.getElementById('exportDataBtn').addEventListener('click', () => this.exportData());
+        document.getElementById('importDataBtn').addEventListener('click', () => this.importData());
+        document.getElementById('clearAllDataBtn').addEventListener('click', () => this.clearAllData());
 
-        // Action buttons
-        document.getElementById('clearCompleted').addEventListener('click', () => this.clearCompleted());
-        document.getElementById('exportBtn').addEventListener('click', () => this.exportTasks());
-        document.getElementById('clearAllBtn').addEventListener('click', () => this.showClearAllConfirm());
+        // Calendar
+        document.getElementById('prevMonth').addEventListener('click', () => this.previousMonth());
+        document.getElementById('nextMonth').addEventListener('click', () => this.nextMonth());
+
+        // Search
+        document.getElementById('searchInput').addEventListener('input', (e) => this.searchTasks(e.target.value));
+
+        // Close modals on outside click
+        window.addEventListener('click', (e) => {
+            const taskModal = document.getElementById('taskModal');
+            const settingsModal = document.getElementById('settingsModal');
+            if (e.target === taskModal) this.closeTaskModal();
+            if (e.target === settingsModal) this.closeSettingsModal();
+        });
     }
 
-    // ==================== Task Operations ====================
-    addTask() {
-        const input = document.getElementById('taskInput');
+    // ==================== Views ====================
+    setupViews() {
+        // Set initial calendar
+        this.currentDate = new Date();
+        this.renderCalendar();
+    }
+
+    switchView(view) {
+        document.querySelectorAll('.view-content').forEach(v => v.style.display = 'none');
+        document.getElementById(view + 'View').style.display = 'block';
+        this.currentView = view;
+
+        if (view === 'calendar') {
+            this.renderCalendar();
+        } else if (view === 'analytics') {
+            this.renderAnalytics();
+        }
+    }
+
+    // ==================== Task Management ====================
+    openTaskModal(taskId = null) {
+        const modal = document.getElementById('taskModal');
+        const title = document.getElementById('taskModalTitle');
+        const form = document.getElementById('taskForm');
+
+        if (taskId) {
+            title.textContent = '编辑任务';
+            const task = this.tasks.find(t => t.id === taskId);
+            document.getElementById('taskTitle').value = task.text;
+            document.getElementById('taskDescription').value = task.description || '';
+            document.getElementById('taskCategory').value = task.category || 'personal';
+            document.getElementById('taskPriority').value = task.priority || 'medium';
+            document.getElementById('taskDueDate').value = task.dueDate || '';
+            document.getElementById('taskTags').value = (task.tags || []).join(', ');
+            this.editingTaskId = taskId;
+        } else {
+            title.textContent = '新建任务';
+            form.reset();
+            this.editingTaskId = null;
+        }
+
+        modal.classList.add('show');
+    }
+
+    closeTaskModal() {
+        document.getElementById('taskModal').classList.remove('show');
+        document.getElementById('taskForm').reset();
+        this.editingTaskId = null;
+    }
+
+    handleTaskSubmit(e) {
+        e.preventDefault();
+
+        const taskData = {
+            text: document.getElementById('taskTitle').value,
+            description: document.getElementById('taskDescription').value,
+            category: document.getElementById('taskCategory').value,
+            priority: document.getElementById('taskPriority').value,
+            dueDate: document.getElementById('taskDueDate').value,
+            tags: document.getElementById('taskTags').value.split(',').map(t => t.trim()).filter(t => t)
+        };
+
+        if (this.editingTaskId) {
+            const task = this.tasks.find(t => t.id === this.editingTaskId);
+            Object.assign(task, taskData);
+            this.showToast('任务已更新', 'success');
+        } else {
+            const task = {
+                id: Date.now(),
+                ...taskData,
+                completed: false,
+                createdAt: new Date().toISOString()
+            };
+            this.tasks.push(task);
+            this.showToast('任务已添加', 'success');
+        }
+
+        this.saveTasks();
+        this.render();
+        this.closeTaskModal();
+    }
+
+    quickAddTask() {
+        const input = document.getElementById('quickAddInput');
         const text = input.value.trim();
 
         if (!text) {
-            this.showToast('Please enter a task', 'warning');
+            this.showToast('请输入任务内容', 'warning');
             return;
         }
 
         const task = {
             id: Date.now(),
             text,
+            description: '',
+            category: 'personal',
+            priority: 'medium',
+            dueDate: '',
+            tags: [],
             completed: false,
-            category: this.currentCategory || 'personal',
-            createdAt: new Date().toISOString(),
-            completedAt: null
+            createdAt: new Date().toISOString()
         };
 
         this.tasks.push(task);
         this.saveTasks();
         this.render();
-        this.showToast('Task added successfully', 'success');
         input.value = '';
-        input.focus();
+        this.showToast('任务已添加', 'success');
     }
 
-    toggleTask(id) {
-        const task = this.tasks.find(t => t.id === id);
+    toggleTask(taskId) {
+        const task = this.tasks.find(t => t.id === taskId);
         if (task) {
             task.completed = !task.completed;
-            task.completedAt = task.completed ? new Date().toISOString() : null;
             this.saveTasks();
             this.render();
         }
     }
 
-    deleteTask(id) {
-        this.tasks = this.tasks.filter(t => t.id !== id);
+    deleteTask(taskId) {
+        this.tasks = this.tasks.filter(t => t.id !== taskId);
         this.saveTasks();
         this.render();
-        this.showToast('Task deleted', 'success');
+        this.showToast('任务已删除', 'success');
     }
 
-    clearCompleted() {
-        const completedCount = this.tasks.filter(t => t.completed).length;
-        if (completedCount === 0) {
-            this.showToast('No completed tasks to clear', 'warning');
-            return;
-        }
-        this.showConfirm(
-            `Delete ${completedCount} completed task(s)?`,
-            () => {
-                this.tasks = this.tasks.filter(t => !t.completed);
-                this.saveTasks();
-                this.render();
-                this.showToast('Completed tasks cleared', 'success');
-            }
-        );
-    }
-
-    clearAll() {
-        this.tasks = [];
-        this.saveTasks();
-        this.render();
-        this.showToast('All tasks cleared', 'success');
-    }
-
-    // ==================== Filtering & Display ====================
+    // ==================== Filtering & Searching ====================
     getFilteredTasks() {
         let filtered = this.tasks;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-        // Apply status filter
-        if (this.currentFilter === 'active') {
-            filtered = filtered.filter(t => !t.completed);
-        } else if (this.currentFilter === 'completed') {
-            filtered = filtered.filter(t => t.completed);
+        switch (this.currentFilter) {
+            case 'today':
+                filtered = filtered.filter(t => {
+                    if (!t.dueDate) return false;
+                    const taskDate = new Date(t.dueDate);
+                    taskDate.setHours(0, 0, 0, 0);
+                    return taskDate.getTime() === today.getTime();
+                });
+                break;
+            case 'week':
+                const weekEnd = new Date(today);
+                weekEnd.setDate(weekEnd.getDate() + 7);
+                filtered = filtered.filter(t => {
+                    if (!t.dueDate) return false;
+                    const taskDate = new Date(t.dueDate);
+                    return taskDate >= today && taskDate <= weekEnd;
+                });
+                break;
+            case 'overdue':
+                filtered = filtered.filter(t => {
+                    if (!t.dueDate || t.completed) return false;
+                    const taskDate = new Date(t.dueDate);
+                    return taskDate < today;
+                });
+                break;
+            case 'completed':
+                filtered = filtered.filter(t => t.completed);
+                break;
         }
 
-        // Apply category filter
-        if (this.currentCategory) {
-            filtered = filtered.filter(t => t.category === this.currentCategory);
-        }
-
-        return filtered;
+        return filtered.sort((a, b) => {
+            const priorityOrder = { high: 0, medium: 1, low: 2 };
+            return priorityOrder[a.priority] - priorityOrder[b.priority];
+        });
     }
 
-    getStats() {
-        return {
-            total: this.tasks.length,
-            active: this.tasks.filter(t => !t.completed).length,
-            completed: this.tasks.filter(t => t.completed).length
-        };
+    getTodayTasks() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return this.tasks.filter(t => {
+            if (!t.dueDate || t.completed) return false;
+            const taskDate = new Date(t.dueDate);
+            taskDate.setHours(0, 0, 0, 0);
+            return taskDate.getTime() === today.getTime();
+        }).slice(0, 5);
+    }
+
+    searchTasks(query) {
+        if (!query.trim()) {
+            this.renderTasks();
+            return;
+        }
+
+        const filtered = this.tasks.filter(t =>
+            t.text.toLowerCase().includes(query.toLowerCase()) ||
+            (t.description || '').toLowerCase().includes(query.toLowerCase())
+        );
+
+        this.renderTasksCustom(filtered);
     }
 
     // ==================== Rendering ====================
     render() {
-        this.renderTasks();
         this.updateStats();
-        this.updateActionButtons();
+        this.renderTodayTasks();
+        this.updateProgress();
+        this.renderTasks();
     }
 
-    renderTasks() {
-        const tasksList = document.getElementById('tasksList');
-        const filtered = this.getFilteredTasks();
+    updateStats() {
+        const total = this.tasks.length;
+        const completed = this.tasks.filter(t => t.completed).length;
+        const active = total - completed;
+        const overdue = this.tasks.filter(t => {
+            if (t.completed) return false;
+            if (!t.dueDate) return false;
+            return new Date(t.dueDate) < new Date();
+        }).length;
 
-        if (filtered.length === 0) {
-            tasksList.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-inbox"></i>
-                    <p>${this.tasks.length === 0 ? 'No tasks yet. Add one to get started!' : 'No tasks match your filters'}</p>
-                </div>
-            `;
+        document.getElementById('totalTasksStat').textContent = total;
+        document.getElementById('completedTasksStat').textContent = completed;
+        document.getElementById('activeTasksStat').textContent = active;
+        document.getElementById('overdueTasksStat').textContent = overdue;
+    }
+
+    updateProgress() {
+        const total = this.tasks.length;
+        const completed = this.tasks.filter(t => t.completed).length;
+        const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+        document.getElementById('progressPercent').textContent = percent + '%';
+
+        const circle = document.getElementById('progressCircle');
+        const circumference = 2 * Math.PI * 50;
+        const offset = circumference - (percent / 100) * circumference;
+        circle.style.strokeDashoffset = offset;
+    }
+
+    renderTodayTasks() {
+        const today = this.getTodayTasks();
+        const container = document.getElementById('todayTasksList');
+
+        if (today.length === 0) {
+            container.innerHTML = '<p class="empty-message">没有今日任务</p>';
             return;
         }
 
-        tasksList.innerHTML = filtered.map(task => this.createTaskElement(task)).join('');
+        container.innerHTML = today.map(task => `
+            <div class="today-task-item ${task.completed ? 'completed' : ''}">
+                <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="app.toggleTask(${task.id})">
+                <span>${this.escapeHtml(task.text)}</span>
+            </div>
+        `).join('');
+    }
 
-        // Add event listeners to task elements
-        tasksList.querySelectorAll('.task-checkbox').forEach(checkbox => {
+    renderTasks() {
+        const filtered = this.getFilteredTasks();
+        this.renderTasksCustom(filtered);
+    }
+
+    renderTasksCustom(tasks) {
+        const container = document.getElementById('tasksList');
+
+        if (tasks.length === 0) {
+            container.innerHTML = '<p class="empty-message">暂无任务</p>';
+            return;
+        }
+
+        container.innerHTML = tasks.map(task => this.createTaskCard(task)).join('');
+
+        // Add event listeners
+        container.querySelectorAll('.task-checkbox').forEach(checkbox => {
             checkbox.addEventListener('change', (e) => {
-                this.toggleTask(parseInt(e.target.dataset.id));
+                this.toggleTask(parseInt(e.target.dataset.taskId));
             });
         });
 
-        tasksList.querySelectorAll('.task-btn.delete').forEach(btn => {
+        container.querySelectorAll('.task-edit-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                this.deleteTask(parseInt(btn.dataset.id));
+                this.openTaskModal(parseInt(btn.dataset.taskId));
+            });
+        });
+
+        container.querySelectorAll('.task-delete-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (confirm('确定删除此任务？')) {
+                    this.deleteTask(parseInt(btn.dataset.taskId));
+                }
             });
         });
     }
 
-    createTaskElement(task) {
-        const createdDate = new Date(task.createdAt).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        });
-
+    createTaskCard(task) {
         const categoryIcons = {
             work: 'fa-briefcase',
             personal: 'fa-heart',
@@ -195,149 +368,284 @@ class TaskManager {
             health: 'fa-heartbeat'
         };
 
-        const categoryIcon = categoryIcons[task.category] || 'fa-tag';
-        const categoryLabel = task.category.charAt(0).toUpperCase() + task.category.slice(1);
+        const categoryLabels = {
+            work: '工作',
+            personal: '个人',
+            shopping: '购物',
+            health: '健康'
+        };
+
+        const dueDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString('zh-CN') : '';
+        const isOverdue = task.dueDate && !task.completed && new Date(task.dueDate) < new Date();
 
         return `
-            <div class="task-item ${task.completed ? 'completed' : ''}">
-                <input 
-                    type="checkbox" 
-                    class="task-checkbox" 
-                    ${task.completed ? 'checked' : ''}
-                    data-id="${task.id}"
-                >
-                <div class="task-content">
-                    <div class="task-text">${this.escapeHtml(task.text)}</div>
-                    <div class="task-meta">
-                        <span class="task-category">
-                            <i class="fas ${categoryIcon}"></i>
-                            ${categoryLabel}
-                        </span>
-                        <span class="task-date">
-                            <i class="fas fa-calendar"></i>
-                            ${createdDate}
-                        </span>
-                    </div>
+            <div class="task-card ${task.completed ? 'completed' : ''} ${isOverdue ? 'overdue' : ''}">
+                <div class="task-card-header">
+                    <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} data-task-id="${task.id}">
+                    <div class="task-title">${this.escapeHtml(task.text)}</div>
+                    <span class="task-priority ${task.priority}">${this.getPriorityLabel(task.priority)}</span>
                 </div>
+                <div class="task-meta">
+                    <span class="task-category">
+                        <i class="fas ${categoryIcons[task.category]}"></i>
+                        ${categoryLabels[task.category]}
+                    </span>
+                    ${dueDate ? `<span class="task-date"><i class="fas fa-calendar"></i>${dueDate}</span>` : ''}
+                </div>
+                ${task.tags && task.tags.length > 0 ? `
+                    <div class="task-tags">
+                        ${task.tags.map(tag => `<span class="task-tag">${this.escapeHtml(tag)}</span>`).join('')}
+                    </div>
+                ` : ''}
                 <div class="task-actions">
-                    <button class="task-btn delete" data-id="${task.id}" title="Delete">
-                        <i class="fas fa-trash"></i>
+                    <button class="task-edit-btn" data-task-id="${task.id}">
+                        <i class="fas fa-edit"></i> 编辑
+                    </button>
+                    <button class="task-delete-btn" data-task-id="${task.id}">
+                        <i class="fas fa-trash"></i> 删除
                     </button>
                 </div>
             </div>
         `;
     }
 
-    updateStats() {
-        const stats = this.getStats();
-        document.getElementById('totalTasks').textContent = stats.total;
-        document.getElementById('activeTasks').textContent = stats.active;
-        document.getElementById('completedTasks').textContent = stats.completed;
+    getPriorityLabel(priority) {
+        const labels = { low: '低', medium: '中', high: '高' };
+        return labels[priority] || '中';
     }
 
-    updateActionButtons() {
-        const clearCompletedBtn = document.getElementById('clearCompleted');
-        const hasCompleted = this.tasks.some(t => t.completed);
-        clearCompletedBtn.style.display = hasCompleted ? 'inline-flex' : 'none';
+    // ==================== Calendar ====================
+    renderCalendar() {
+        const year = this.currentDate.getFullYear();
+        const month = this.currentDate.getMonth();
+        const monthName = new Date(year, month).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long' });
+
+        document.getElementById('currentMonth').textContent = monthName;
+
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        const startingDayOfWeek = firstDay.getDay();
+
+        let html = '<div class="calendar-grid">';
+
+        // Day headers
+        const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
+        dayNames.forEach(day => {
+            html += `<div class="calendar-day-header">${day}</div>`;
+        });
+
+        // Empty cells
+        for (let i = 0; i < startingDayOfWeek; i++) {
+            html += '<div class="calendar-day other-month"></div>';
+        }
+
+        // Days
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(year, month, day);
+            date.setHours(0, 0, 0, 0);
+
+            const tasksCount = this.tasks.filter(t => {
+                if (!t.dueDate) return false;
+                const taskDate = new Date(t.dueDate);
+                taskDate.setHours(0, 0, 0, 0);
+                return taskDate.getTime() === date.getTime();
+            }).length;
+
+            const isToday = date.getTime() === today.getTime();
+
+            html += `
+                <div class="calendar-day ${isToday ? 'today' : ''}" title="${tasksCount} 个任务">
+                    ${day}
+                </div>
+            `;
+        }
+
+        html += '</div>';
+
+        const container = document.getElementById('calendar');
+        container.innerHTML = html;
+    }
+
+    previousMonth() {
+        this.currentDate.setMonth(this.currentDate.getMonth() - 1);
+        this.renderCalendar();
+    }
+
+    nextMonth() {
+        this.currentDate.setMonth(this.currentDate.getMonth() + 1);
+        this.renderCalendar();
+    }
+
+    // ==================== Analytics ====================
+    renderAnalytics() {
+        const dailyContainer = document.getElementById('dailyChart');
+        const categoryContainer = document.getElementById('categoryChart');
+
+        // Daily completion chart
+        const last7Days = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            date.setHours(0, 0, 0, 0);
+            const label = date.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' });
+            const count = this.tasks.filter(t => {
+                if (!t.completedAt) return false;
+                const completedDate = new Date(t.completedAt);
+                completedDate.setHours(0, 0, 0, 0);
+                return completedDate.getTime() === date.getTime();
+            }).length;
+            last7Days.push({ label, count });
+        }
+
+        const maxCount = Math.max(...last7Days.map(d => d.count), 1);
+        dailyContainer.innerHTML = `
+            <div style="display: flex; align-items: flex-end; gap: 0.5rem; height: 150px;">
+                ${last7Days.map(d => `
+                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                        <div style="width: 30px; height: ${(d.count / maxCount) * 100}px; background: var(--primary); border-radius: 4px;"></div>
+                        <span style="font-size: 0.75rem; margin-top: 0.5rem; color: var(--text-secondary);">${d.label}</span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        // Category chart
+        const categories = {};
+        this.tasks.forEach(t => {
+            const cat = t.category || 'personal';
+            categories[cat] = (categories[cat] || 0) + 1;
+        });
+
+        const categoryLabels = {
+            work: '工作',
+            personal: '个人',
+            shopping: '购物',
+            health: '健康'
+        };
+
+        categoryContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                ${Object.entries(categories).map(([cat, count]) => `
+                    <div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>${categoryLabels[cat] || cat}</span>
+                            <span style="font-weight: bold;">${count}</span>
+                        </div>
+                        <div style="width: 100%; height: 20px; background: var(--bg-secondary); border-radius: 10px; overflow: hidden;">
+                            <div style="width: ${(count / Math.max(...Object.values(categories))) * 100}%; height: 100%; background: var(--primary);"></div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    // ==================== Settings ====================
+    openSettingsModal() {
+        const modal = document.getElementById('settingsModal');
+        document.getElementById('darkModeToggle').checked = document.body.classList.contains('dark-mode');
+        modal.classList.add('show');
+    }
+
+    closeSettingsModal() {
+        document.getElementById('settingsModal').classList.remove('show');
+    }
+
+    toggleDarkMode(enabled) {
+        if (enabled) {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('theme', 'light');
+        }
+    }
+
+    loadTheme() {
+        const theme = localStorage.getItem('theme');
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+    }
+
+    exportData() {
+        const dataStr = JSON.stringify(this.tasks, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `taskflow-${new Date().getTime()}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+        this.showToast('数据已导出', 'success');
+    }
+
+    importData() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    if (Array.isArray(imported)) {
+                        this.tasks = imported;
+                        this.saveTasks();
+                        this.render();
+                        this.showToast('数据已导入', 'success');
+                    } else {
+                        this.showToast('无效的数据格式', 'error');
+                    }
+                } catch (error) {
+                    this.showToast('导入失败', 'error');
+                }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    }
+
+    clearAllData() {
+        if (confirm('这会删除所有任务，是否继续？')) {
+            this.tasks = [];
+            this.saveTasks();
+            this.render();
+            this.showToast('所有数据已清除', 'success');
+        }
     }
 
     // ==================== Storage ====================
     saveTasks() {
         try {
             localStorage.setItem('tasks', JSON.stringify(this.tasks));
-            this.updateLastModified();
         } catch (error) {
-            console.error('Error saving tasks:', error);
-            this.showToast('Error saving tasks', 'error');
+            this.showToast('保存失败', 'error');
         }
     }
 
     loadTasks() {
         try {
-            const stored = localStorage.getItem('tasks');
-            return stored ? JSON.parse(stored) : [];
+            return JSON.parse(localStorage.getItem('tasks')) || [];
         } catch (error) {
-            console.error('Error loading tasks:', error);
             return [];
         }
     }
 
-    updateLastModified() {
-        const now = new Date().toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        });
-        document.getElementById('lastUpdated').textContent = now;
-    }
-
-    // ==================== Export ====================
-    exportTasks() {
-        if (this.tasks.length === 0) {
-            this.showToast('No tasks to export', 'warning');
-            return;
-        }
-
-        const dataStr = JSON.stringify(this.tasks, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `tasks-${new Date().getTime()}.json`;
-        link.click();
-        URL.revokeObjectURL(url);
-        this.showToast('Tasks exported successfully', 'success');
-    }
-
-    // ==================== UI Utilities ====================
+    // ==================== Utilities ====================
     showToast(message, type = 'success') {
         const toast = document.getElementById('toast');
         toast.textContent = message;
         toast.className = `toast show ${type}`;
-        
+
         setTimeout(() => {
             toast.classList.remove('show');
         }, 3000);
-    }
-
-    showConfirm(message, onConfirm) {
-        const modal = document.getElementById('confirmModal');
-        const confirmBtn = document.getElementById('confirmBtn');
-        const cancelBtn = document.getElementById('cancelBtn');
-        const confirmMessage = document.getElementById('confirmMessage');
-
-        confirmMessage.textContent = message;
-        modal.classList.add('show');
-
-        const handleConfirm = () => {
-            modal.classList.remove('show');
-            onConfirm();
-            cleanup();
-        };
-
-        const handleCancel = () => {
-            modal.classList.remove('show');
-            cleanup();
-        };
-
-        const cleanup = () => {
-            confirmBtn.removeEventListener('click', handleConfirm);
-            cancelBtn.removeEventListener('click', handleCancel);
-        };
-
-        confirmBtn.addEventListener('click', handleConfirm);
-        cancelBtn.addEventListener('click', handleCancel);
-    }
-
-    showClearAllConfirm() {
-        if (this.tasks.length === 0) {
-            this.showToast('No tasks to clear', 'warning');
-            return;
-        }
-        this.showConfirm(
-            `Delete all ${this.tasks.length} task(s)? This cannot be undone.`,
-            () => this.clearAll()
-        );
     }
 
     escapeHtml(text) {
@@ -347,9 +655,8 @@ class TaskManager {
     }
 }
 
-// ==================== Initialization ====================
-let taskManager;
-
+// ==================== Initialize ====================
+let app;
 document.addEventListener('DOMContentLoaded', () => {
-    taskManager = new TaskManager();
+    app = new TaskFlowApp();
 });
