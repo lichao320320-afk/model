@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List Application</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>
+                    <i class="fas fa-tasks"></i>
+                    My To-Do List
+                </h1>
+                <p class="subtitle">Stay organized and productive</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Section -->
+            <section class="input-section">
+                <div class="input-container">
+                    <input 
+                        type="text" 
+                        id="taskInput" 
+                        class="task-input"
+                        placeholder="Add a new task..."
+                        autocomplete="off"
+                    >
+                    <button id="addBtn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Add Task
+                    </button>
+                </div>
+                <div class="filter-container">
+                    <button class="filter-btn active" data-filter="all">
+                        <i class="fas fa-list"></i>
+                        All
+                    </button>
+                    <button class="filter-btn" data-filter="active">
+                        <i class="fas fa-circle"></i>
+                        Active
+                    </button>
+                    <button class="filter-btn" data-filter="completed">
+                        <i class="fas fa-check-circle"></i>
+                        Completed
+                    </button>
+                </div>
+            </section>
+
+            <!-- Stats Section -->
+            <section class="stats-section">
+                <div class="stat-item">
+                    <div class="stat-icon total">
+                        <i class="fas fa-list-check"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="totalTasks">0</span>
+                        <span class="stat-label">Total Tasks</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon active">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="activeTasks">0</span>
+                        <span class="stat-label">Active</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="completedTasks">0</span>
+                        <span class="stat-label">Completed</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Categories Section -->
+            <section class="categories-section">
+                <h2>Categories</h2>
+                <div class="categories-grid">
+                    <button class="category-btn" data-category="work">
+                        <i class="fas fa-briefcase"></i>
+                        <span>Work</span>
+                    </button>
+                    <button class="category-btn" data-category="personal">
+                        <i class="fas fa-heart"></i>
+                        <span>Personal</span>
+                    </button>
+                    <button class="category-btn" data-category="shopping">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Shopping</span>
+                    </button>
+                    <button class="category-btn" data-category="health">
+                        <i class="fas fa-heartbeat"></i>
+                        <span>Health</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Tasks List Section -->
+            <section class="tasks-section">
+                <div id="tasksList" class="tasks-list">
+                    <!-- Tasks will be rendered here -->
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>No tasks yet. Add one to get started!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Action Buttons -->
+            <section class="action-buttons">
+                <button id="clearCompleted" class="btn btn-secondary" style="display: none;">
+                    <i class="fas fa-trash"></i>
+                    Clear Completed
+                </button>
+                <button id="exportBtn" class="btn btn-secondary">
+                    <i class="fas fa-download"></i>
+                    Export Tasks
+                </button>
+                <button id="clearAllBtn" class="btn btn-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Clear All
+                </button>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Last updated: <span id="lastUpdated">-</span></p>
+            <p>Tasks stored in your browser's local storage</p>
+        </footer>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h2>Confirm Action</h2>
+            <p id="confirmMessage">Are you sure?</p>
+            <div class="modal-buttons">
+                <button id="confirmBtn" class="btn btn-primary">Confirm</button>
+                <button id="cancelBtn" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
