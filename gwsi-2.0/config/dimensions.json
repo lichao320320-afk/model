@@ -1,0 +1,445 @@
+{
+  "dimensions": [
+    {
+      "id": 1,
+      "name": "市场规划力",
+      "english_name": "Market Sizing Power",
+      "weight": 0.25,
+      "max_score": 100,
+      "description": "市场未来10年的发展潜力和投资吸引力",
+      "sub_indicators": [
+        {
+          "name": "装机容量CAGR",
+          "weight": 0.4,
+          "unit": "%",
+          "scoring_rules": [
+            {"range": [15, 100], "score": 90},
+            {"range": [10, 15], "score": 70},
+            {"range": [5, 10], "score": 50},
+            {"range": [2, 5], "score": 30},
+            {"range": [0, 2], "score": 10}
+          ]
+        },
+        {
+          "name": "政府投资承诺度",
+          "weight": 0.3,
+          "unit": "指数",
+          "scoring_rules": [
+            {"range": [80, 100], "score": 90},
+            {"range": [60, 80], "score": 70},
+            {"range": [40, 60], "score": 50},
+            {"range": [20, 40], "score": 30},
+            {"range": [0, 20], "score": 10}
+          ]
+        },
+        {
+          "name": "市场竞争强度",
+          "weight": 0.3,
+          "unit": "指数",
+          "scoring_rules": [
+            {"range": [0, 20], "score": 90},
+            {"range": [20, 40], "score": 70},
+            {"range": [40, 60], "score": 50},
+            {"range": [60, 80], "score": 30},
+            {"range": [80, 100], "score": 10}
+          ]
+        }
+      ],
+      "data_sources": ["IEA Wind", "GWEC", "各国能源部", "BNEF"],
+      "update_frequency": "quarterly"
+    },
+    {
+      "id": 2,
+      "name": "进入壁垒",
+      "english_name": "Entry Barriers",
+      "weight": 0.15,
+      "max_score": 100,
+      "description": "市场进入的难度（得分越高=壁垒越低）",
+      "sub_indicators": [
+        {
+          "name": "贸易壁垒程度",
+          "weight": 0.35,
+          "unit": "指数",
+          "scoring_rules": [
+            {"range": [0, 10], "score": 80},
+            {"range": [10, 20], "score": 60},
+            {"range": [20, 40], "score": 40},
+            {"range": [40, 60], "score": 20},
+            {"range": [60, 100], "score": 0}
+          ]
+        },
+        {
+          "name": "许可证/认证难度",
+          "weight": 0.35,
+          "unit": "天数",
+          "scoring_rules": [
+            {"range": [0, 30], "score": 80},
+            {"range": [30, 90], "score": 60},
+            {"range": [90, 180], "score": 40},
+            {"range": [180, 365], "score": 20},
+            {"range": [365, 1000], "score": 0}
+          ]
+        },
+        {
+          "name": "现有竞争格局",
+          "weight": 0.3,
+          "unit": "指数",
+          "scoring_rules": [
+            {"range": [0, 20], "score": 80},
+            {"range": [20, 40], "score": 60},
+            {"range": [40, 60], "score": 40},
+            {"range": [60, 80], "score": 20},
+            {"range": [80, 100], "score": 0}
+          ]
+        }
+      ],
+      "data_sources": ["WTO", "各国商务部", "行业协会", "贸易律师"],
+      "update_frequency": "semi-annual"
+    },
+    {
+      "id": 3,
+      "name": "基础设施",
+      "english_name": "Infrastructure",
+      "weight": 0.10,
+      "max_score": 100,
+      "description": "风电产业所需的物理基础设施完善度",
+      "sub_indicators": [
+        {
+          "name": "风资源质量",
+          "weight": 0.4,
+          "unit": "m/s",
+          "scoring_rules": [
+            {"range": [7.5, 15], "score": 90},
+            {"range": [6.5, 7.5], "score": 70},
+            {"range": [5.5, 6.5], "score": 50},
+            {"range": [4.5, 5.5], "score": 30},
+            {"range": [0, 4.5], "score": 10}
+          ]
+        },
+        {
+          "name": "电网建设水平",
+          "weight": 0.3,
+          "unit": "指数",
+          "scoring_rules": [
+            {"range": [80, 100], "score": 90},
+            {"range": [60, 80], "score": 70},
+            {"range": [40, 60], "score": 50},
+            {"range": [20, 40], "score": 30},
+            {"range": [0, 20], "score": 10}
+          ]
+        },
+        {
+          "name": "物流和制造基地",
+          "weight": 0.3,
+          "unit": "指数",
+          "scoring_rules": [
+            {"range": [80, 100], "score": 90},
+            {"range": [60, 80], "score": 70},
+            {"range": [40, 60], "score": 50},
+            {"range": [20, 40], "score": 30},
+            {"range": [0, 20], "score": 10}
+          ]
+        }
+      ],
+      "data_sources": ["国家气象局", "电力公司", "IEA", "各国政府"],
+      "update_frequency": "annual"
+    },
+    {
+      "id": 4,
+      "name": "资本安全",
+      "english_name": "Capital Safety",
+      "weight": 0.10,
+      "max_score": 100,
+      "description": "投资的安全性和政治风险",
+      "sub_indicators": [
+        {
+          "name": "政治稳定指数",
+          "weight": 0.4,
+          "unit": "指数",
+          "scoring_rules": [
+            {"range": [70, 100], "score": 90},
+            {"range": [50, 70], "score": 70},
+            {"range": [30, 50], "score": 50},
+            {"range": [10, 30], "score": 30},
+            {"range": [-100, 10], "score": 10}
+          ]
+        },
+        {
+          "name": "国家信用评级",
+          "weight": 0.35,
+          "unit": "评级",
+          "scoring_rules": [
+            {"text": "AAA", "score": 95},
+            {"text": "AA", "score": 85},
+            {"text": "A", "score": 70},
+            {"text": "BBB", "score": 50},
+            {"text": "BB", "score": 30},
+            {"text": "B及以下", "score": 10}
+          ]
+        },
+        {
+          "name": "汇兑风险",
+          "weight": 0.25,
+          "unit": "指数",
+          "scoring_rules": [
+            {"range": [0, 10], "score": 90},
+            {"range": [10, 30], "score": 70},
+            {"range": [30, 50], "score": 50},
+            {"range": [50, 70], "score": 30},
+            {"range": [70, 100], "score": 10}
+          ]
+        }
+      ],
+      "data_sources": ["IMF", "World Bank", "Moody's", "S&P", "Fitch"],
+      "update_frequency": "monthly"
+    },
+    {
+      "id": 5,
+      "name": "本地化要求",
+      "english_name": "Localization Requirements",
+      "weight": 0.10,
+      "max_score": 100,
+      "description": "市场要求的本地采购、制造、人才比例",
+      "sub_indicators": [
+        {
+          "name": "本地采购要求",
+          "weight": 0.35,
+          "unit": "%",
+          "scoring_rules": [
+            {"range": [0, 20], "score": 90},
+            {"range": [20, 40], "score": 70},
+            {"range": [40, 60], "score": 50},
+            {"range": [60, 80], "score": 30},
+            {"range": [80, 100], "score": 10}
+          ]
+        },
+        {
+          "name": "本地制造要求",
+          "weight": 0.35,
+          "unit": "%",
+          "scoring_rules": [
+            {"range": [0, 30], "score": 90},
+            {"range": [30, 50], "score": 70},
+            {"range": [50, 70], "score": 50},
+            {"range": [70, 90], "score": 30},
+            {"range": [90, 100], "score": 10}
+          ]
+        },
+        {
+          "name": "技术转让要求",
+          "weight": 0.3,
+          "unit": "强度指数",
+          "scoring_rules": [
+            {"range": [0, 20], "score": 90},
+            {"range": [20, 40], "score": 70},
+            {"range": [40, 60], "score": 50},
+            {"range": [60, 80], "score": 30},
+            {"range": [80, 100], "score": 10}
+          ]
+        }
+      ],
+      "data_sources": ["各国产业政策", "双边贸易协议", "律师事务所", "行业报告"],
+      "update_frequency": "semi-annual"
+    },
+    {
+      "id": 6,
+      "name": "供应链部署",
+      "english_name": "Supply Chain Deployment",
+      "weight": 0.10,
+      "max_score": 100,
+      "description": "零部件供应的便利性和产业链成熟度",
+      "sub_indicators": [
+        {
+          "name": "零部件本地供应能力",
+          "weight": 0.35,
+          "unit": "指数",
+          "scoring_rules": [
+            {"range": [80, 100], "score": 90},
+            {"range": [60, 80], "score": 70},
+            {"range": [40, 60], "score": 50},
+            {"range": [20, 40], "score": 30},
+            {"range": [0, 20], "score": 10}
+          ]
+        },
+        {
+          "name": "产业链完整度",
+          "weight": 0.35,
+          "unit": "指数",
+          "scoring_rules": [
+            {"range": [80, 100], "score": 90},
+            {"range": [60, 80], "score": 70},
+            {"range": [40, 60], "score": 50},
+            {"range": [20, 40], "score": 30},
+            {"range": [0, 20], "score": 10}
+          ]
+        },
+        {
+          "name": "劳动力成本和技能",
+          "weight": 0.3,
+          "unit": "指数",
+          "scoring_rules": [
+            {"range": [70, 100], "score": 90},
+            {"range": [50, 70], "score": 70},
+            {"range": [30, 50], "score": 50},
+            {"range": [10, 30], "score": 30},
+            {"range": [0, 10], "score": 10}
+          ]
+        }
+      ],
+      "data_sources": ["产业调研", "供应商评估", "物流公司", "行业统计"],
+      "update_frequency": "annual"
+    },
+    {
+      "id": 7,
+      "name": "正业准入性",
+      "english_name": "Industry Access Friendliness",
+      "weight": 0.05,
+      "max_score": 100,
+      "description": "市场行业准入标准的严格程度和易获得性",
+      "sub_indicators": [
+        {
+          "name": "必要许可证数量",
+          "weight": 0.4,
+          "unit": "个数",
+          "scoring_rules": [
+            {"range": [0, 2], "score": 90},
+            {"range": [2, 5], "score": 70},
+            {"range": [5, 10], "score": 50},
+            {"range": [10, 15], "score": 30},
+            {"range": [15, 100], "score": 10}
+          ]
+        },
+        {
+          "name": "标准清晰度和稳定性",
+          "weight": 0.35,
+          "unit": "指数",
+          "scoring_rules": [
+            {"range": [80, 100], "score": 90},
+            {"range": [60, 80], "score": 70},
+            {"range": [40, 60], "score": 50},
+            {"range": [20, 40], "score": 30},
+            {"range": [0, 20], "score": 10}
+          ]
+        },
+        {
+          "name": "获批周期",
+          "weight": 0.25,
+          "unit": "天数",
+          "scoring_rules": [
+            {"range": [0, 90], "score": 90},
+            {"range": [90, 180], "score": 70},
+            {"range": [180, 365], "score": 50},
+            {"range": [365, 730], "score": 30},
+            {"range": [730, 2000], "score": 10}
+          ]
+        }
+      ],
+      "data_sources": ["监管机构", "认证机构", "律师事务所", "咨询公司"],
+      "update_frequency": "semi-annual"
+    },
+    {
+      "id": 8,
+      "name": "区域配对协调",
+      "english_name": "Regional Coordination",
+      "weight": 0.10,
+      "max_score": 100,
+      "description": "与周边区域协作的便利性和一体化程度",
+      "sub_indicators": [
+        {
+          "name": "区域一体化程度",
+          "weight": 0.4,
+          "unit": "指数",
+          "scoring_rules": [
+            {"range": [80, 100], "score": 90},
+            {"range": [60, 80], "score": 70},
+            {"range": [40, 60], "score": 50},
+            {"range": [20, 40], "score": 30},
+            {"range": [0, 20], "score": 10}
+          ]
+        },
+        {
+          "name": "跨界协议和机制",
+          "weight": 0.35,
+          "unit": "指数",
+          "scoring_rules": [
+            {"range": [80, 100], "score": 90},
+            {"range": [60, 80], "score": 70},
+            {"range": [40, 60], "score": 50},
+            {"range": [20, 40], "score": 30},
+            {"range": [0, 20], "score": 10}
+          ]
+        },
+        {
+          "name": "劳动力和资金流动性",
+          "weight": 0.25,
+          "unit": "指数",
+          "scoring_rules": [
+            {"range": [80, 100], "score": 90},
+            {"range": [60, 80], "score": 70},
+            {"range": [40, 60], "score": 50},
+            {"range": [20, 40], "score": 30},
+            {"range": [0, 20], "score": 10}
+          ]
+        }
+      ],
+      "data_sources": ["地区组织", "政府协议", "市场报告", "研究机构"],
+      "update_frequency": "annual"
+    },
+    {
+      "id": 9,
+      "name": "投资便利性",
+      "english_name": "Investment Convenience",
+      "weight": 0.05,
+      "max_score": 100,
+      "description": "资金进出和融资的便利程度",
+      "sub_indicators": [
+        {
+          "name": "外商投资政策开放度",
+          "weight": 0.35,
+          "unit": "指数",
+          "scoring_rules": [
+            {"range": [80, 100], "score": 90},
+            {"range": [60, 80], "score": 70},
+            {"range": [40, 60], "score": 50},
+            {"range": [20, 40], "score": 30},
+            {"range": [0, 20], "score": 10}
+          ]
+        },
+        {
+          "name": "融资渠道便利性",
+          "weight": 0.35,
+          "unit": "指数",
+          "scoring_rules": [
+            {"range": [80, 100], "score": 90},
+            {"range": [60, 80], "score": 70},
+            {"range": [40, 60], "score": 50},
+            {"range": [20, 40], "score": 30},
+            {"range": [0, 20], "score": 10}
+          ]
+        },
+        {
+          "name": "汇款便利度和税收优惠",
+          "weight": 0.3,
+          "unit": "指数",
+          "scoring_rules": [
+            {"range": [80, 100], "score": 90},
+            {"range": [60, 80], "score": 70},
+            {"range": [40, 60], "score": 50},
+            {"range": [20, 40], "score": 30},
+            {"range": [0, 20], "score": 10}
+          ]
+        }
+      ],
+      "data_sources": ["中央银行", "财政部", "投资促进机构", "商业银行"],
+      "update_frequency": "quarterly"
+    }
+  ],
+  "summary": {
+    "total_dimensions": 9,
+    "total_weight": 1.0,
+    "max_possible_score": 100,
+    "min_possible_score": 0,
+    "evaluation_period": "2026-2035",
+    "last_updated": "2026-07-17"
+  }
+}
